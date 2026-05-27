@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, Loader2 } from 'lucide-react';
+import { X, ExternalLink, Loader2, Download } from 'lucide-react';
 import { R2Config } from '@/lib/config';
 import { getDownloadUrl } from '@/lib/api';
 import { useTranslation } from './LanguageProvider';
@@ -11,21 +11,63 @@ interface Props {
   onClose: () => void;
 }
 
+const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp', 'avif', 'apng', 'tiff', 'tif'];
+const VIDEO_EXTS = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'm4v'];
+const AUDIO_EXTS = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma', 'opus'];
+const TEXT_EXTS = [
+  'txt', 'md', 'markdown', 'log', 'csv', 'tsv',
+  'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf', 'env',
+  'js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass',
+  'html', 'htm', 'vue', 'svelte', 'astro',
+  'py', 'rb', 'go', 'rs', 'java', 'kt', 'c', 'cpp', 'h', 'hpp', 'cs',
+  'sh', 'bash', 'zsh', 'fish', 'bat', 'cmd', 'ps1',
+  'sql', 'graphql', 'gql',
+  'dockerfile', 'makefile', 'gitignore', 'editorconfig',
+  'lua', 'r', 'swift', 'dart', 'php', 'pl', 'ex', 'exs', 'erl', 'hs',
+];
+const OFFICE_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+const FONT_EXTS = ['ttf', 'otf', 'woff', 'woff2'];
+
+function getFileType(ext: string) {
+  if (IMAGE_EXTS.includes(ext)) return 'image';
+  if (VIDEO_EXTS.includes(ext)) return 'video';
+  if (AUDIO_EXTS.includes(ext)) return 'audio';
+  if (ext === 'pdf') return 'pdf';
+  if (TEXT_EXTS.includes(ext)) return 'text';
+  if (OFFICE_EXTS.includes(ext)) return 'office';
+  if (FONT_EXTS.includes(ext)) return 'font';
+  return 'unknown';
+}
+
 export default function PreviewModal({ fileKey, config, onClose }: Props) {
   const { t } = useTranslation();
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [textContent, setTextContent] = useState<string | null>(null);
 
   useEffect(() => {
     if (fileKey && config) {
+      setTextContent(null);
       const fetchUrl = async () => {
         try {
           setLoading(true);
           setError(null);
-          // If public domain is configured, we can just use that, but presigned URL is guaranteed to work even for private buckets.
           const downloadUrl = await getDownloadUrl(config, fileKey);
           setUrl(downloadUrl);
+
+          // For text files, also fetch the content
+          const ext = fileKey.split('.').pop()?.toLowerCase() || '';
+          if (getFileType(ext) === 'text') {
+            try {
+              const res = await fetch(downloadUrl);
+              const text = await res.text();
+              // Cap at 500KB to avoid freezing the browser
+              setTextContent(text.length > 512000 ? text.slice(0, 512000) + '\n\n... (truncated)' : text);
+            } catch {
+              // If fetch fails (CORS), fall back to download link
+            }
+          }
         } catch (e) {
           setError(t('failedDownload'));
         } finally {
@@ -35,16 +77,96 @@ export default function PreviewModal({ fileKey, config, onClose }: Props) {
       fetchUrl();
     } else {
       setUrl(null);
+      setTextContent(null);
     }
   }, [fileKey, config, t]);
 
   if (!fileKey) return null;
 
   const ext = fileKey.split('.').pop()?.toLowerCase() || '';
-  const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico'].includes(ext);
-  const isVideo = ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
-  const isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(ext);
-  const isPdf = ext === 'pdf';
+  const fileType = getFileType(ext);
+
+  const renderPreview = () => {
+    if (!url) return null;
+
+    switch (fileType) {
+      case 'image':
+        return <img src={url} alt={fileKey} style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />;
+      case 'video':
+        return <video src={url} controls autoPlay style={{ maxWidth: '100%', maxHeight: '70vh' }} />;
+      case 'audio':
+        return <audio src={url} controls style={{ width: '100%', minWidth: '300px' }} />;
+      case 'pdf':
+        return <iframe src={url} style={{ width: '100vw', maxWidth: '1000px', height: '70vh', border: 'none' }} />;
+      case 'text':
+        if (textContent !== null) {
+          return (
+            <pre style={{
+              width: '100%',
+              maxWidth: '1000px',
+              maxHeight: '70vh',
+              overflow: 'auto',
+              padding: '20px',
+              margin: 0,
+              fontSize: '13px',
+              lineHeight: '1.6',
+              fontFamily: '"Fira Code", "Cascadia Code", "JetBrains Mono", monospace',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              color: 'var(--text-primary)',
+              background: 'transparent',
+              textAlign: 'left',
+            }}>
+              {textContent}
+            </pre>
+          );
+        }
+        return (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Cannot fetch text content (CORS restriction).</p>
+            <a href={url} target="_blank" rel="noreferrer" className="btn btn-primary">
+              <ExternalLink size={16} style={{ marginRight: '8px' }} /> Open in Browser
+            </a>
+          </div>
+        );
+      case 'office':
+        return (
+          <iframe
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`}
+            style={{ width: '100vw', maxWidth: '1000px', height: '70vh', border: 'none' }}
+          />
+        );
+      case 'font':
+        return (
+          <div style={{ textAlign: 'center', padding: '40px', width: '100%', maxWidth: '600px' }}>
+            <style>{`@font-face { font-family: 'PreviewFont'; src: url('${url}'); }`}</style>
+            <p style={{ fontFamily: 'PreviewFont', fontSize: '48px', marginBottom: '24px' }}>
+              AaBbCcDd
+            </p>
+            <p style={{ fontFamily: 'PreviewFont', fontSize: '24px', marginBottom: '16px' }}>
+              The quick brown fox jumps over the lazy dog.
+            </p>
+            <p style={{ fontFamily: 'PreviewFont', fontSize: '24px', marginBottom: '16px' }}>
+              汉字测试 0123456789 !@#$%
+            </p>
+            <p style={{ fontFamily: 'PreviewFont', fontSize: '16px', color: 'var(--text-secondary)' }}>
+              ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
+            </p>
+          </div>
+        );
+      default:
+        return (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
+              Preview not available for <strong>.{ext}</strong> files.
+            </p>
+            <a href={url} download={fileKey} className="btn btn-primary">
+              <Download size={16} style={{ marginRight: '8px' }} /> Download File
+            </a>
+          </div>
+        );
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -82,20 +204,7 @@ export default function PreviewModal({ fileKey, config, onClose }: Props) {
               <Loader2 size={32} className="animate-spin" color="var(--accent)" />
             ) : error ? (
               <p style={{ color: 'var(--danger)' }}>{error}</p>
-            ) : url ? (
-              <>
-                {isImage && <img src={url} alt={fileKey} style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />}
-                {isVideo && <video src={url} controls autoPlay style={{ maxWidth: '100%', maxHeight: '70vh' }} />}
-                {isAudio && <audio src={url} controls style={{ width: '100%', minWidth: '300px' }} />}
-                {isPdf && <iframe src={url} style={{ width: '100vw', maxWidth: '1000px', height: '70vh', border: 'none' }} />}
-                {!isImage && !isVideo && !isAudio && !isPdf && (
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <p style={{ marginBottom: '16px' }}>Preview not supported for this file type.</p>
-                    <a href={url} download={fileKey} className="btn btn-primary">Download File</a>
-                  </div>
-                )}
-              </>
-            ) : null}
+            ) : renderPreview()}
           </div>
         </motion.div>
       </motion.div>
