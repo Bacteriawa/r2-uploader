@@ -43,9 +43,6 @@ const translations = {
     failedDelete: 'Failed to delete file',
     failedRename: 'Failed to rename file',
     failedDownload: 'Failed to get download URL',
-    corsError: 'Network Error: CORS not configured on bucket.',
-    fixCors: 'Fix CORS Automatically',
-    corsSuccess: 'CORS configured! Please retry upload.',
   },
   zh: {
     appTitle: 'R2 上传工具',
@@ -76,9 +73,6 @@ const translations = {
     failedDelete: '删除文件失败',
     failedRename: '重命名文件失败',
     failedDownload: '获取下载链接失败',
-    corsError: '网络错误：存储桶未配置 CORS 跨域。',
-    fixCors: '一键自动修复 CORS',
-    corsSuccess: 'CORS 配置成功！请重试上传。',
   }
 };
 

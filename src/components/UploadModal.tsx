@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, X, File, CheckCircle, AlertCircle } from 'lucide-react';
 import { R2Config } from '@/lib/config';
-import { getPresignedUrl, initMultipartUpload, getMultipartPresignedUrl, completeMultipartUpload, setupCors } from '@/lib/api';
+import { getPresignedUrl, initMultipartUpload, getMultipartPresignedUrl, completeMultipartUpload } from '@/lib/api';
 import axios from 'axios';
 import { useTranslation } from './LanguageProvider';
 
@@ -29,8 +29,6 @@ export default function UploadModal({ isOpen, onClose, config, onSuccess }: Prop
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<UploadTask[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
-  const [corsFixed, setCorsFixed] = useState(false);
-  const [fixingCors, setFixingCors] = useState(false);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -92,25 +90,7 @@ export default function UploadModal({ isOpen, onClose, config, onSuccess }: Prop
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'success', progress: 100 } : t));
       onSuccess();
     } catch (error: any) {
-      let errorMsg = error.message;
-      if (errorMsg === 'Network Error') {
-        errorMsg = t('corsError');
-      }
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'error', error: errorMsg } : t));
-    }
-  };
-
-  const handleFixCors = async () => {
-    try {
-      setFixingCors(true);
-      await setupCors(config);
-      setCorsFixed(true);
-      // reset tasks
-      setTasks([]);
-    } catch (e) {
-      alert('Failed to fix CORS');
-    } finally {
-      setFixingCors(false);
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'error', error: error.message } : t));
     }
   };
 
@@ -239,27 +219,6 @@ export default function UploadModal({ isOpen, onClose, config, onSuccess }: Prop
                     )}
                   </div>
                 ))}
-                
-                {tasks.some(task => task.error === t('corsError')) && (
-                  <div style={{ marginTop: '12px', padding: '16px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid var(--danger)' }}>
-                    <p style={{ color: 'var(--danger)', fontSize: '14px', marginBottom: '12px' }}>
-                      {t('corsError')}
-                    </p>
-                    <button 
-                      className="btn btn-danger" 
-                      onClick={handleFixCors}
-                      disabled={fixingCors}
-                    >
-                      {fixingCors ? '...' : t('fixCors')}
-                    </button>
-                  </div>
-                )}
-                
-                {corsFixed && (
-                  <p style={{ color: 'var(--success)', fontSize: '14px', marginTop: '12px' }}>
-                    {t('corsSuccess')}
-                  </p>
-                )}
               </div>
             )}
           </motion.div>

@@ -54,8 +54,3 @@ export async function completeMultipartUpload(config: R2Config, key: string, upl
   const res = await axios.post('/api/upload/multipart/complete', { key, uploadId, parts }, { headers: getHeaders(config) });
   return res.data;
 }
-
-export async function setupCors(config: R2Config) {
-  const res = await axios.post('/api/cors', {}, { headers: getHeaders(config) });
-  return res.data;
-}
