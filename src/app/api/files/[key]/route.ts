@@ -3,12 +3,13 @@ import { getS3Client, getBucketName, verifyAuth } from '@/lib/s3';
 import { DeleteObjectCommand, CopyObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-export async function DELETE(req: Request, { params }: { params: { key: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ key: string }> }) {
   try {
     verifyAuth(req);
     const client = getS3Client(req);
     const bucket = getBucketName(req);
-    const key = decodeURIComponent(params.key);
+    const resolvedParams = await params;
+    const key = decodeURIComponent(resolvedParams.key);
 
     const command = new DeleteObjectCommand({
       Bucket: bucket,
@@ -22,12 +23,13 @@ export async function DELETE(req: Request, { params }: { params: { key: string }
   }
 }
 
-export async function POST(req: Request, { params }: { params: { key: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ key: string }> }) {
   try {
     verifyAuth(req);
     const client = getS3Client(req);
     const bucket = getBucketName(req);
-    const key = decodeURIComponent(params.key);
+    const resolvedParams = await params;
+    const key = decodeURIComponent(resolvedParams.key);
     
     const body = await req.json();
     const { action, newKey } = body;
