@@ -28,11 +28,9 @@ export default function Home() {
       if (loaded) {
         setConfig(loaded);
       } else {
-        setIsConfigOpen(true);
         setLoading(false);
       }
     } else {
-      setIsConfigOpen(true);
       setLoading(false);
     }
   }, []);
@@ -48,10 +46,7 @@ export default function Home() {
       setFiles(data);
     } catch (err: any) {
       console.error(err);
-      setError(err?.response?.data?.error || err.message || 'Failed to connect to R2');
-      if (err?.response?.status === 401) {
-        setIsConfigOpen(true);
-      }
+      setError(err?.response?.data?.error || err.message || 'Failed to connect to Object Storage');
     } finally {
       setLoading(false);
     }
