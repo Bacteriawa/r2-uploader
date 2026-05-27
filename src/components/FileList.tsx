@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { File as FileIcon, Trash2, Edit2, Download, Link as LinkIcon, Check } from 'lucide-react';
+import { File as FileIcon, Trash2, Edit2, Download, Link as LinkIcon, Check, Eye } from 'lucide-react';
 import { R2Config } from '@/lib/config';
 import { deleteFile, renameFile, getDownloadUrl } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,9 +17,10 @@ interface Props {
   files: R2File[];
   config: R2Config;
   onRefresh: () => void;
+  onPreview: (key: string) => void;
 }
 
-export default function FileList({ files, config, onRefresh }: Props) {
+export default function FileList({ files, config, onRefresh, onPreview }: Props) {
   const { t } = useTranslation();
   const [renamingKey, setRenamingKey] = useState<string | null>(null);
   const [newKey, setNewKey] = useState('');
@@ -154,7 +155,14 @@ export default function FileList({ files, config, onRefresh }: Props) {
                         style={{ padding: '6px 10px', width: '200px' }}
                       />
                     ) : (
-                      <span>{file.key}</span>
+                      <span 
+                        onClick={() => onPreview(file.key)}
+                        style={{ cursor: 'pointer' }}
+                        className="filename-link"
+                        title="Click to preview"
+                      >
+                        {file.key}
+                      </span>
                     )}
                   </div>
                 </td>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Settings, UploadCloud, RefreshCw, Folder, Moon, Sun } from 'lucide-react';
 import ConfigModal from '@/components/ConfigModal';
 import UploadModal from '@/components/UploadModal';
+import PreviewModal from '@/components/PreviewModal';
 import FileList, { R2File } from '@/components/FileList';
 import { R2Config, hasConfig, loadConfig } from '@/lib/config';
 import { listFiles, checkAuth } from '@/lib/api';
@@ -17,6 +18,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
   const { t, lang, setLang, theme, setTheme } = useTranslation();
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function Home() {
             </button>
           </div>
         ) : config ? (
-          <FileList files={files} config={config} onRefresh={() => loadData(config)} />
+          <FileList files={files} config={config} onRefresh={() => loadData(config)} onPreview={(key) => setPreviewKey(key)} />
         ) : (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
             <Settings size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
@@ -156,6 +158,12 @@ export default function Home() {
           onSuccess={() => loadData(config)}
         />
       )}
+
+      <PreviewModal
+        fileKey={previewKey}
+        config={config}
+        onClose={() => setPreviewKey(null)}
+      />
       
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes spin {
