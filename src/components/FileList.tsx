@@ -191,7 +191,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
                         onClick={() => onPreview(file.key)}
                         style={{ cursor: 'pointer' }}
                         className="filename-link"
-                        title="Click to preview"
+                        title={t('preview') || 'Click to preview'}
                       >
                         {file.key}
                       </span>
@@ -216,7 +216,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
                       className="btn-outline action-icon"
                       style={{ border: 'none' }}
                       onClick={() => handleDownload(file.key)}
-                      title="Download"
+                      title={t('download') || 'Download'}
                     >
                       <Download size={16} />
                     </button>
@@ -227,7 +227,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
                         setRenamingKey(file.key);
                         setNewKey(file.key);
                       }}
-                      title="Rename"
+                      title={t('rename') || 'Rename'}
                     >
                       <Edit2 size={16} />
                     </button>
@@ -235,7 +235,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
                       className="btn-outline action-icon delete"
                       style={{ border: 'none' }}
                       onClick={() => handleDelete(file.key)}
-                      title="Delete"
+                      title={t('delete') || 'Delete'}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -246,7 +246,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
             {filteredFiles.length === 0 && searchQuery && (
               <tr>
                 <td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
-                  No files match your search.
+                  {t('noSearchResults') || 'No files match your search.'}
                 </td>
               </tr>
             )}

@@ -211,7 +211,7 @@ export default function Home() {
           <GithubIcon size={16} /> {t('openSource') || 'Open Source on GitHub'}
         </a>
         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', opacity: 0.5, fontFamily: 'monospace' }}>
-          Build: {process.env.NEXT_PUBLIC_COMMIT_HASH || 'dev'}
+          Build: {process.env.NODE_ENV === 'development' ? 'dev' : (process.env.NEXT_PUBLIC_COMMIT_HASH || 'unknown')}
         </div>
       </footer>
 

@@ -133,9 +133,9 @@ export default function PreviewModal({ fileKey, config, onClose }: Props) {
         }
         return (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Cannot fetch text content (CORS restriction).</p>
+            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>{t('corsError') || 'Cannot fetch text content (CORS restriction).'}</p>
             <a href={url} target="_blank" rel="noreferrer" className="btn btn-primary">
-              <ExternalLink size={16} style={{ marginRight: '8px' }} /> Open in Browser
+              <ExternalLink size={16} style={{ marginRight: '8px' }} /> {t('openInBrowser') || 'Open in Browser'}
             </a>
           </div>
         );
@@ -168,10 +168,10 @@ export default function PreviewModal({ fileKey, config, onClose }: Props) {
         return (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Preview not available for <strong>.{ext}</strong> files.
+              {t('previewNotAvailable') || 'Preview not available for'} <strong>.{ext}</strong> {t('previewNotAvailableEnd') || 'files.'}
             </p>
             <a href={url} download={fileKey} className="btn btn-primary">
-              <Download size={16} style={{ marginRight: '8px' }} /> Download File
+              <Download size={16} style={{ marginRight: '8px' }} /> {t('downloadFile') || 'Download File'}
             </a>
           </div>
         );
@@ -199,7 +199,7 @@ export default function PreviewModal({ fileKey, config, onClose }: Props) {
             </h2>
             <div style={{ display: 'flex', gap: '8px' }}>
               {url && (
-                <a href={url} target="_blank" rel="noreferrer" className="action-icon" style={{ textDecoration: 'none', background: 'transparent' }} title="Open in new tab">
+                <a href={url} target="_blank" rel="noreferrer" className="action-icon" style={{ textDecoration: 'none', background: 'transparent' }} title={t('openInNewTab') || 'Open in new tab'}>
                   <ExternalLink size={20} />
                 </a>
               )}
