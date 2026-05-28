@@ -86,7 +86,7 @@ export default function UploadModal({ isOpen, onOpen, onClose, config, onSuccess
   useEffect(() => {
     const serializable = tasks.map(t => ({
       id: t.id,
-      file: { name: t.file.file?.name || t.file.name, size: t.file.size, type: t.file.type, lastModified: t.file.lastModified },
+      file: { name: t.file.name, size: t.file.size, type: t.file.type, lastModified: t.file.lastModified },
       progress: t.progress,
       status: t.status,
       loadedSize: t.loadedSize,
@@ -145,6 +145,8 @@ export default function UploadModal({ isOpen, onOpen, onClose, config, onSuccess
           localStorage.setItem(cacheKey, JSON.stringify({ uploadId, parts: [] }));
           setTasks(prev => prev.map(t => t.id === taskId ? { ...t, uploadId } : t));
         }
+
+        if (!uploadId) throw new Error('Upload ID is missing');
 
         const totalParts = Math.ceil(file.size / CHUNK_SIZE);
         
