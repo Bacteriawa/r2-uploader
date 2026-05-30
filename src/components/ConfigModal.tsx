@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Cloud, Key, Shield, X, Server, ChevronDown, List, Plus } from 'lucide-react';
-import { R2Config, saveConfig, loadConfig, loadAllConfigs } from '@/lib/config';
+import { Settings, Cloud, Key, Shield, X, Server, ChevronDown, List, Plus, Trash2 } from 'lucide-react';
+import { R2Config, saveConfig, loadConfig, loadAllConfigs, deleteConfig } from '@/lib/config';
 import { useTranslation } from './LanguageProvider';
 import { ErrorBoundary } from './common/ErrorBoundary';
+import { ConfirmModal } from './common/ConfirmModal';
 
 interface Props {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function ConfigModal({ isOpen, onClose, onSave }: Props) {
   ];
 
   const [profiles, setProfiles] = useState<R2Config[]>([]);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
 
   // Populates form from localStorage when modal opens
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function ConfigModal({ isOpen, onClose, onSave }: Props) {
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div 
@@ -185,12 +188,28 @@ export default function ConfigModal({ isOpen, onClose, onSave }: Props) {
                                 background: config.id === p.id ? 'var(--input-bg)' : 'transparent',
                                 color: config.id === p.id ? 'var(--accent)' : 'var(--text-primary)',
                                 fontWeight: config.id === p.id ? 600 : 400,
-                                transition: 'background-color 0.1s'
+                                transition: 'background-color 0.1s',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
                               }}
                               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--input-bg)'}
                               onMouseLeave={(e) => e.currentTarget.style.background = config.id === p.id ? 'var(--input-bg)' : 'transparent'}
                             >
-                              {p.label || p.bucket}
+                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {p.label || p.bucket}
+                              </span>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setProfileToDelete(p.id!);
+                                }}
+                                className="action-icon delete"
+                                style={{ padding: '4px', border: 'none', background: 'transparent' }}
+                                title={t('delete') || 'Delete'}
+                              >
+                                <Trash2 size={14} />
+                              </div>
                             </div>
                           ))}
                         </motion.div>
@@ -385,5 +404,27 @@ export default function ConfigModal({ isOpen, onClose, onSave }: Props) {
         </motion.div>
       )}
     </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!profileToDelete}
+        message={t('confirmDeleteProfile') || 'Are you sure you want to delete this profile?'}
+        onConfirm={() => {
+          if (profileToDelete) {
+            deleteConfig(profileToDelete);
+            const remaining = loadAllConfigs();
+            setProfiles(remaining);
+            if (config.id === profileToDelete) {
+              if (remaining.length > 0) {
+                setConfig(remaining[0]);
+              } else {
+                setConfig({ accessKeyId: '', secretAccessKey: '', bucket: '', endpoint: '', region: 'auto', publicDomain: '', provider: 'r2', label: 'New Profile' });
+              }
+            }
+          }
+          setProfileToDelete(null);
+        }}
+        onCancel={() => setProfileToDelete(null)}
+      />
+    </>
   );
 }

@@ -103,6 +103,21 @@ export function saveConfig(config: R2Config) {
   saveAllConfigs(all);
 }
 
+export function deleteConfig(id: string) {
+  const all = loadAllConfigs();
+  const filtered = all.filter(c => c.id !== id);
+  saveAllConfigs(filtered);
+
+  const current = loadConfig();
+  if (current && current.id === id) {
+    if (filtered.length > 0) {
+      saveConfig(filtered[0]);
+    } else {
+      clearConfig();
+    }
+  }
+}
+
 export function loadConfig(): R2Config | null {
   if (typeof window === 'undefined') return null;
   const jsonStr = localStorage.getItem(STORAGE_KEY);

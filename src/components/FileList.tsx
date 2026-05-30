@@ -7,6 +7,7 @@ import { deleteFile, renameFile, getDownloadUrl } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from './LanguageProvider';
 import { useToast } from './Toast';
+import { ConfirmModal } from './common/ConfirmModal';
 
 export interface R2File {
   key: string;
@@ -29,6 +30,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
   const [loading, setLoading] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [fileToDelete, setFileToDelete] = useState<string | null>(null);
 
   const filteredFiles = useMemo(() => {
     if (!searchQuery) return files;
@@ -48,8 +50,10 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
     return new Date(dateStr).toLocaleString();
   };
 
-  const handleDelete = async (key: string) => {
-    if (!confirm(t('confirmDelete'))) return;
+  const executeDelete = async () => {
+    if (!fileToDelete) return;
+    const key = fileToDelete;
+    setFileToDelete(null);
     try {
       setLoading(key);
       await deleteFile(config, key);
@@ -131,6 +135,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
   }
 
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {files.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px' }}>
@@ -234,7 +239,7 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
                     <button 
                       className="btn-outline action-icon delete"
                       style={{ border: 'none' }}
-                      onClick={() => handleDelete(file.key)}
+                      onClick={() => setFileToDelete(file.key)}
                       title={t('delete') || 'Delete'}
                     >
                       <Trash2 size={16} />
@@ -254,6 +259,13 @@ export default function FileList({ files, config, onRefresh, onPreview }: Props)
         </tbody>
       </table>
     </div>
-  </div>
+    </div>
+    <ConfirmModal
+      isOpen={!!fileToDelete}
+      message={t('confirmDelete') || 'Are you sure you want to delete this file?'}
+      onConfirm={executeDelete}
+      onCancel={() => setFileToDelete(null)}
+    />
+    </>
   );
 }
